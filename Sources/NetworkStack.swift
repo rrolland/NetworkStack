@@ -34,13 +34,28 @@ public final class NetworkStack {
   // MARK: - Properties
   
   fileprivate let disposeBag = DisposeBag()
-  fileprivate let baseURL: String
   fileprivate let keychainService: KeychainService
+  public let baseURL: String  
   
-  fileprivate(set) var uploadManager: Alamofire.SessionManager?
   fileprivate var requestManager: Alamofire.SessionManager
   
-  fileprivate var askCredentialHandler: AskCredentialHandler?
+  fileprivate var uploadManager: Alamofire.SessionManager?
+  
+  public var uploadManagerSessionDelegate: Alamofire.SessionDelegate? {
+    return uploadManager?.delegate
+  }
+  
+  public var backgroundCompletionHandler: (() -> Void)? {
+    get {
+      return uploadManager?.backgroundCompletionHandler
+    }
+    set {
+      uploadManager?.backgroundCompletionHandler = newValue
+    }
+  }
+
+  
+  public var askCredentialHandler: AskCredentialHandler?
   public var renewTokenHandler: RenewTokenHandler?
   
   public weak var delegate: NetworkStackDelegate?
