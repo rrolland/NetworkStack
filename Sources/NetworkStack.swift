@@ -21,29 +21,29 @@ import RxSwift
 import Alamofire
 
 public final class NetworkStack {
-
+  
   // MARK: - Constants
-
+  
   static let authorizationHeaderKey = "Authorization"
-
+  
   // MARK: - Type aliases
   
   public typealias RenewTokenHandler = (() -> Observable<Void>)
-
+  
   // MARK: - Properties
-
+  
   fileprivate let disposeBag = DisposeBag()
   fileprivate let keychainService: KeychainService
   public let baseURL: String
-
+  
   fileprivate var requestManager: Alamofire.SessionManager
-
+  
   fileprivate var uploadManager: Alamofire.SessionManager?
-
+  
   public var uploadManagerSessionDelegate: Alamofire.SessionDelegate? {
     return uploadManager?.delegate
   }
-
+  
   public var backgroundCompletionHandler: (() -> Void)? {
     get {
       return uploadManager?.backgroundCompletionHandler
@@ -52,7 +52,7 @@ public final class NetworkStack {
       uploadManager?.backgroundCompletionHandler = newValue
     }
   }
-
+  
   /// Auth - Tokens part
   fileprivate var tokenManager: TokenManager?
   public var askCredential: AskCredential?
@@ -66,16 +66,16 @@ public final class NetworkStack {
             throw NetworkStackError.tokenUnavaible
           }
         }
-
+        
         self.tokenManager = TokenManager(tokenFetcher: tokenFetchAndGiveValue)
       }
     }
   }
-
+  
   public weak var delegate: NetworkStackDelegate?
-
+  
   // MARK: - Setup
-
+  
   public init(baseURL: String,
               keychainService: KeychainService,
               requestManager: Alamofire.SessionManager = Alamofire.SessionManager(),
@@ -93,14 +93,14 @@ public final class NetworkStack {
 
 // MARK: - Cancellation
 extension NetworkStack {
-
+  
   public func disconnect() -> Observable<Void> {
     return self.cancelAllRequest()
       .map({ [unowned self] () -> Void in
         return self.clearToken()
       })
   }
-
+  
   fileprivate func cancelAllRequest() -> Observable<Void> {
     return Observable.just(Void())
       .map { () -> Void in
@@ -110,19 +110,19 @@ extension NetworkStack {
         return self.resetUploadManager()
     }
   }
-
+  
   fileprivate func resetRequestManager() {
     self.requestManager = self.recreateManager(manager: self.requestManager)
   }
-
+  
   // TODO: Handle upload manager reset
   fileprivate func resetUploadManager() -> Observable<Void> {
     guard let uploadManager = self.uploadManager else {
       return Observable.just(Void())
     }
-
+    
     let configuration = uploadManager.session.configuration
-
+    
     return Observable.create { observer -> Disposable in
       let sessionDelegate = uploadManager.delegate
       sessionDelegate.sessionDidBecomeInvalidWithError = { (session: URLSession, error: Error?) -> Void in
@@ -133,14 +133,14 @@ extension NetworkStack {
         }
       }
       uploadManager.session.invalidateAndCancel()
-
+      
       return Disposables.create()
       }
       .map { [weak self] () -> Void in
         self?.uploadManager = SessionManager(configuration: configuration)
     }
   }
-
+  
   fileprivate func recreateManager(manager: SessionManager) -> SessionManager {
     let configuration = manager.session.configuration
     manager.session.invalidateAndCancel()
@@ -150,26 +150,67 @@ extension NetworkStack {
 
 // MARK: - Request building
 extension NetworkStack {
-
+  
   public func request(method: Alamofire.HTTPMethod,
                       route: Routable,
                       needsAuthorization: Bool = false,
                       parameters: Alamofire.Parameters? = nil,
                       headers: Alamofire.HTTPHeaders? = nil,
                       encoding: Alamofire.ParameterEncoding = JSONEncoding.default) -> DataRequest? {
+    return request(method: method, route: route, needsAuthorization: needsAuthorization, parameters: parameters, headers: headers, encoding: encoding, httpBody: nil)
+  }
+  
+  public func request(method: Alamofire.HTTPMethod,
+                      route: Routable,
+                      needsAuthorization: Bool = false,
+                      headers: Alamofire.HTTPHeaders? = nil,
+                      encoding: Alamofire.ParameterEncoding = JSONEncoding.default,
+                      httpBody: Data? = nil) -> DataRequest? {
+    return request(method: method, route: route, needsAuthorization: needsAuthorization, parameters: nil, headers: headers, encoding: encoding, httpBody: httpBody)
+  }
+  
+  private func request(method: Alamofire.HTTPMethod,
+                       route: Routable,
+                       needsAuthorization: Bool = false,
+                       parameters: Alamofire.Parameters? = nil,
+                       headers: Alamofire.HTTPHeaders? = nil,
+                       encoding: Alamofire.ParameterEncoding = JSONEncoding.default,
+                       httpBody: Data? = nil) -> DataRequest? {
     guard let requestUrl = self.requestURL(route) else {
       return nil
     }
-
+    
     let requestHeaders = self.requestHeaders(needsAuthorization: needsAuthorization, headers: headers)
-
+    
     return self.requestManager.request(requestUrl,
                                        method: method,
                                        parameters: parameters,
                                        encoding: encoding,
-                                       headers: requestHeaders)
+                                       headers: requestHeaders,
+                                       httpBody: httpBody)
   }
-
+  
+  private func request(
+    _ url: URLConvertible,
+    method: HTTPMethod = .get,
+    parameters: Parameters? = nil,
+    encoding: ParameterEncoding = URLEncoding.default,
+    headers: HTTPHeaders? = nil,
+    httpBody: Data? = nil)
+    -> DataRequest?
+  {
+    var originalRequest: URLRequest?
+    
+    do {
+      originalRequest = try URLRequest(url: url, method: method, headers: headers)
+      originalRequest?.httpBody = httpBody
+      let encodedURLRequest = try encoding.encode(originalRequest!, with: parameters)
+      return self.requestManager.request(encodedURLRequest)
+    } catch {
+      return nil
+    }
+  }
+  
   fileprivate func buildRequest(requestParameters: RequestParameters) -> DataRequest? {
     return self.request(method: requestParameters.method,
                         route: requestParameters.route,
@@ -178,14 +219,14 @@ extension NetworkStack {
                         headers: requestParameters.headers,
                         encoding: requestParameters.parametersEncoding)
   }
-
+  
   fileprivate func requestURL(_ route: Routable) -> URL? {
     guard let requestUrl = URL(string: self.baseURL + route.path) else {
       return nil
     }
     return requestUrl
   }
-
+  
   fileprivate func requestHeaders(needsAuthorization: Bool = false, headers: Alamofire.HTTPHeaders?) -> Alamofire.HTTPHeaders {
     var requestHeaders: Alamofire.HTTPHeaders
     if let headers = headers {
@@ -193,7 +234,7 @@ extension NetworkStack {
     } else {
       requestHeaders = [:]
     }
-
+    
     if needsAuthorization {
       let tokenValue = self.auhtorizationHeaderValue()
       if let tokenAutValue = tokenValue {
@@ -207,12 +248,12 @@ extension NetworkStack {
     }
     return requestHeaders
   }
-
+  
   fileprivate func updateRequestAuthorizationHeader(dataRequest: Alamofire.DataRequest) -> Alamofire.DataRequest {
     guard let tokenValue = self.auhtorizationHeaderValue(), var newURLRequest = dataRequest.request else {
       return dataRequest
     }
-
+    
     newURLRequest.setValue(tokenValue, forHTTPHeaderField: NetworkStack.authorizationHeaderKey)
     return self.requestManager.request(newURLRequest)
   }
@@ -235,12 +276,12 @@ extension NetworkStack {
       return Observable.just(Void())
     }
   }
-
+  
   fileprivate func askCredentials() -> Observable<Void> {
     guard let askCredentialHandler = self.askCredential?.handler else {
       return Observable.just(Void())
     }
-
+    
     return Observable.just(Void())
       .map({ [unowned self] () -> Void in
         self.clearToken()
@@ -249,7 +290,7 @@ extension NetworkStack {
         return askCredentialHandler()
       })
   }
-
+  
   fileprivate func shouldRenewToken(forError error: Error) -> Bool {
     var shouldRenewToken = false
     if case NetworkStackError.http(httpURLResponse: let httpURLResponse, data: _) = error, httpURLResponse.statusCode == 401 {
@@ -257,22 +298,22 @@ extension NetworkStack {
     }
     return shouldRenewToken
   }
-
+  
   fileprivate func shouldAskCredentials(forError error: Error) -> Bool {
     guard let triggerCondition = self.askCredential?.triggerCondition else {
       return false
     }
     return triggerCondition(error)
   }
-
+  
   fileprivate func sendAutoRetryRequest<T>(_ sendRequestBlock: @escaping () -> Observable<T>, renewTokenFunction: @escaping () -> Observable<Void>) -> Observable<T> {
-
+    
     return sendRequestBlock()
       .catchError { [unowned self] (error: Error) -> Observable<T> in
         // On error, check if we need to refresh token
         if let tokenManager = self.tokenManager, self.shouldRenewToken(forError: error) {
           tokenManager.invalidateToken()
-
+          
           return tokenManager.fetchToken()
             .do(onError: { [unowned self] error in
               // Ask for credentials if renew token fail for any reason
@@ -294,7 +335,7 @@ extension NetworkStack {
 // MARK: - Error management
 
 extension NetworkStack {
-
+  
   fileprivate func webserviceStackError(error: Error, httpURLResponse: HTTPURLResponse?, responseData: Data?) -> NetworkStackError {
     let otherErrorsBlock = { (error: NSError) -> NetworkStackError in
       let returnError: NetworkStackError
@@ -305,16 +346,16 @@ extension NetworkStack {
       }
       return returnError
     }
-
+    
     // We're forced to compare with NSError because there's a bug in Xcode 8.2 / Swift 3.0
     // when bridging NSErrors to Errors makes the program crash (BAD_INSTRUCTION) — Solved in 8.3
     let nserror = error as NSError
     guard nserror.domain == NSURLErrorDomain else {
       return otherErrorsBlock(nserror)
     }
-
+    
     let finalError: NetworkStackError
-
+    
     switch nserror.code {
     case NSURLErrorNotConnectedToInternet,
          NSURLErrorCannotLoadFromNetwork, NSURLErrorNetworkConnectionLost,
@@ -327,15 +368,15 @@ extension NetworkStack {
     default:
       finalError = otherErrorsBlock(nserror)
     }
-
+    
     return finalError
   }
 }
 
 // MARK: - Request
 extension NetworkStack {
-
-  fileprivate func sendRequest<T: DataResponseSerializerProtocol>(
+  
+  public func sendRequest<T: DataResponseSerializerProtocol>(
     alamofireRequest: Alamofire.DataRequest,
     queue: DispatchQueue = DispatchQueue.global(qos: .default),
     responseSerializer: T)
@@ -343,11 +384,11 @@ extension NetworkStack {
       return Observable.create { [unowned self] observer in
         self.validateRequest(request: alamofireRequest)
           .response(queue: queue, responseSerializer: responseSerializer) { [unowned self] (packedResponse: DataResponse<T.SerializedObject>) -> Void in
-
+            
             if let response = packedResponse.response, let request = packedResponse.request {
               self.delegate?.networkStack(self, didReceiveResponse: response, forRequest: request)
             }
-
+            
             switch packedResponse.result {
             case .success(let result):
               if let httpResponse = packedResponse.response {
@@ -367,10 +408,10 @@ extension NetworkStack {
         }
         .subscribeOn(ConcurrentDispatchQueueScheduler(queue: queue))
   }
-
+  
   fileprivate func sendRequest<T: DataResponseSerializerProtocol>(requestParameters: RequestParameters,
-                               queue: DispatchQueue = DispatchQueue.global(qos: .default),
-                               responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
+                                                                  queue: DispatchQueue = DispatchQueue.global(qos: .default),
+                                                                  responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
     if requestParameters.needsAuthorization {
       // Need to pass the parameters directly, because in case of retry, need to build the request again.
       return self.sendAuthenticatedRequest(requestParameters: requestParameters, queue: queue, responseSerializer: responseSerializer)
@@ -379,38 +420,38 @@ extension NetworkStack {
       guard let request = self.buildRequest(requestParameters: requestParameters) else {
         return Observable.error(NetworkStackError.requestBuildFail)
       }
-
+      
       return self.sendRequest(alamofireRequest: request, queue: queue, responseSerializer: responseSerializer)
     }
   }
-
+  
   fileprivate func sendAuthenticatedRequest<T: DataResponseSerializerProtocol>(
     requestParameters: RequestParameters,
     queue: DispatchQueue = DispatchQueue.global(qos: .default),
     responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
-
+    
     let requestObservable: Observable<(HTTPURLResponse, T.SerializedObject)>
-
+    
     if let tokenFetcher = self.renewTokenHandler {
       requestObservable = self.sendAutoRetryRequest({ [unowned self] () -> Observable<(HTTPURLResponse, T.SerializedObject)> in
-
+        
         guard let request = self.buildRequest(requestParameters: requestParameters) else {
           return Observable.error(NetworkStackError.requestBuildFail)
         }
-
+        
         return self.sendRequest(alamofireRequest: request, queue: queue, responseSerializer: responseSerializer)
         }, renewTokenFunction: { () -> Observable<Void> in
           return tokenFetcher().map { _ in return }
       })
     } else {
-
+      
       guard let request = self.buildRequest(requestParameters: requestParameters) else {
         return Observable.error(NetworkStackError.requestBuildFail)
       }
-
+      
       requestObservable = self.sendRequest(alamofireRequest: request, queue: queue, responseSerializer: responseSerializer)
     }
-
+    
     return requestObservable
       .do(onError: { [unowned self] error in
         self.askCredentialsIfNeeded(forError: error)
@@ -422,25 +463,25 @@ extension NetworkStack {
 
 // MARK: - Upload request
 extension NetworkStack {
-
+  
   fileprivate func sendUploadRequest<T: DataResponseSerializerProtocol>(uploadRequestParameters: UploadRequestParameters,
-                                     queue: DispatchQueue = DispatchQueue.global(qos: .default),
-                                     responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
-
+                                                                        queue: DispatchQueue = DispatchQueue.global(qos: .default),
+                                                                        responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
+    
     let requestHeaders = self.requestHeaders(needsAuthorization: uploadRequestParameters.needsAuthorization,
                                              headers: uploadRequestParameters.headers)
-
+    
     return Observable.create({ (observer) -> Disposable in
       guard let requestURL = self.requestURL(uploadRequestParameters.route) else {
         observer.onError(NetworkStackError.requestBuildFail)
         return Disposables.create()
       }
-
+      
       guard let uploadManager = self.uploadManager else {
         observer.onError(NetworkStackError.uploadManagerIsNotSet)
         return Disposables.create()
       }
-
+      
       uploadManager.upload(multipartFormData: { [weak self] (multipartFormData) in
         self?.enrichMultipartFormData(multipartFormData: multipartFormData,
                                       from: uploadRequestParameters)
@@ -455,31 +496,31 @@ extension NetworkStack {
               observer.onError(encodingError)
             }
       })
-
+      
       return Disposables.create()
     })
       .flatMap { [unowned self] uploadRequest -> Observable<(HTTPURLResponse, T.SerializedObject)> in
         return self.sendRequest(alamofireRequest: uploadRequest, queue: queue, responseSerializer: responseSerializer)
     }
   }
-
+  
   public func sendBackgroundUploadRequest(uploadRequestParameters: UploadRequestParameters,
                                           queue: DispatchQueue = DispatchQueue.global(qos: .default)) -> Observable<URLSessionTask> {
     return Observable.create({ [unowned self] (observer) -> Disposable in
-
+      
       guard let requestURL = self.requestURL(uploadRequestParameters.route) else {
         observer.onError(NetworkStackError.requestBuildFail)
         return Disposables.create()
       }
-
+      
       guard let uploadManager = self.uploadManager else {
         observer.onError(NetworkStackError.uploadManagerIsNotSet)
         return Disposables.create()
       }
-
+      
       let requestHeaders = self.requestHeaders(needsAuthorization: uploadRequestParameters.needsAuthorization,
                                                headers: uploadRequestParameters.headers)
-
+      
       uploadManager.upload(multipartFormData: { [weak self] (multipartFormData) in
         self?.enrichMultipartFormData(multipartFormData: multipartFormData, from: uploadRequestParameters)
         }, to: requestURL.absoluteString,
@@ -495,15 +536,15 @@ extension NetworkStack {
               observer.onError(error)
             }
       })
-
+      
       return Disposables.create()
     })
       .subscribeOn(ConcurrentDispatchQueueScheduler(queue: queue))
   }
-
+  
   fileprivate func enrichMultipartFormData(multipartFormData: MultipartFormData,
                                            from uploadRequestParameters: UploadRequestParameters) {
-
+    
     for fileToUpload in uploadRequestParameters.uploadFiles {
       multipartFormData.append(fileToUpload.fileURL,
                                withName: fileToUpload.parameterName,
@@ -513,10 +554,10 @@ extension NetworkStack {
     guard let params = uploadRequestParameters.parameters else {
       return
     }
-
+    
     for (key, value) in params {
       let data: Data?
-
+      
       switch value {
       case let valueData as Data:
         data = valueData
@@ -526,7 +567,7 @@ extension NetworkStack {
         let strValue = String(describing: value)
         data = strValue.data(using: String.Encoding.utf8)
       }
-
+      
       if let data = data {
         multipartFormData.append(data, withName: key)
       }
@@ -536,7 +577,7 @@ extension NetworkStack {
 
 // MARK: - Data request
 extension NetworkStack {
-
+  
   public func sendRequestWithDataResponse(requestParameters: RequestParameters,
                                           queue: DispatchQueue = DispatchQueue.global(qos: .default)) -> Observable<(HTTPURLResponse, Data)> {
     let responseSerializer = DataRequest.dataResponseSerializer()
@@ -544,7 +585,7 @@ extension NetworkStack {
                             queue: queue,
                             responseSerializer: responseSerializer)
   }
-
+  
   public func sendUploadRequestWithDataResponse(uploadRequestParameters: UploadRequestParameters,
                                                 queue: DispatchQueue = DispatchQueue.global(qos: .default)) -> Observable<(HTTPURLResponse, Data)> {
     let responseSerializer = DataRequest.dataResponseSerializer()
@@ -556,21 +597,21 @@ extension NetworkStack {
 
 // MARK: - JSON request
 extension NetworkStack {
-
+  
   fileprivate func defaultJSONResponseSerializer() -> DataResponseSerializer<Any> {
     let jsonOption = JSONSerialization.ReadingOptions.allowFragments
     return DataRequest.jsonResponseSerializer(options: jsonOption)
   }
-
+  
   public func sendRequestWithJSONResponse(requestParameters: RequestParameters,
                                           queue: DispatchQueue = DispatchQueue.global(qos: .default)) -> Observable<(HTTPURLResponse, Any)> {
-
+    
     let responseSerializer = self.defaultJSONResponseSerializer()
     return self.sendRequest(requestParameters: requestParameters,
                             queue: queue,
                             responseSerializer: responseSerializer)
   }
-
+  
   public func sendUploadRequestWithJSONResponse(uploadRequestParameters: UploadRequestParameters,
                                                 queue: DispatchQueue = DispatchQueue.global(qos: .default)) -> Observable<(HTTPURLResponse, Any)> {
     let responseSerializer = self.defaultJSONResponseSerializer()
@@ -590,29 +631,29 @@ extension NetworkStack {
     }
     return "Bearer \(accessToken)"
   }
-
+  
   public func clearToken() {
     self.keychainService.accessToken = nil
     self.keychainService.refreshToken = nil
     self.keychainService.expirationInterval = nil
   }
-
+  
   public func updateToken(token: String, refreshToken: String? = nil, expiresIn: TimeInterval? = nil) {
     self.keychainService.accessToken = token
     self.keychainService.refreshToken = refreshToken
     self.keychainService.expirationInterval = expiresIn
   }
-
+  
   // Returns true if token is expired, and the app should show the authentication view
   public func isTokenExpired() -> Bool {
     return self.keychainService.isAccessTokenValid == false
   }
-
+  
   public func currentAccessToken() -> String? {
     let token = self.keychainService.accessToken
     return token
   }
-
+  
   public func currentRefreshToken() -> String? {
     return self.keychainService.refreshToken
   }
