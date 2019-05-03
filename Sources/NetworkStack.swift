@@ -182,12 +182,12 @@ extension NetworkStack {
     
     let requestHeaders = self.requestHeaders(needsAuthorization: needsAuthorization, headers: headers)
     
-    return self.requestManager.request(requestUrl,
-                                       method: method,
-                                       parameters: parameters,
-                                       encoding: encoding,
-                                       headers: requestHeaders,
-                                       httpBody: httpBody)
+    return self.request(requestUrl,
+                        method: method,
+                        parameters: parameters,
+                        encoding: encoding,
+                        headers: requestHeaders,
+                        httpBody: httpBody)
   }
   
   private func request(
