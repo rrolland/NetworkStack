@@ -166,7 +166,9 @@ extension NetworkStack {
                       headers: Alamofire.HTTPHeaders? = nil,
                       encoding: Alamofire.ParameterEncoding = JSONEncoding.default,
                       httpBody: Data? = nil) -> DataRequest? {
-    return request(method: method, route: route, needsAuthorization: needsAuthorization, parameters: nil, headers: headers, encoding: encoding, httpBody: httpBody)
+    let result: DataRequest? = request(method: method, route: route, needsAuthorization: needsAuthorization, parameters: nil, headers: headers, encoding: encoding, httpBody: httpBody)
+    
+    return result
   }
   
   private func request(method: Alamofire.HTTPMethod,
@@ -381,6 +383,12 @@ extension NetworkStack {
     queue: DispatchQueue = DispatchQueue.global(qos: .default),
     responseSerializer: T)
     -> Observable<(HTTPURLResponse, T.SerializedObject)> {
+      
+      // If Sessions.startImmediatly == false, need to manually launch the request.
+      if let state: URLSessionTask.State = alamofireRequest.task?.state, state == .suspended {
+        alamofireRequest.resume()
+      }
+      
       return Observable.create { [unowned self] observer in
         self.validateRequest(request: alamofireRequest)
           .response(queue: queue, responseSerializer: responseSerializer) { [unowned self] (packedResponse: DataResponse<T.SerializedObject>) -> Void in
@@ -425,7 +433,7 @@ extension NetworkStack {
     }
   }
   
-  fileprivate func sendAuthenticatedRequest<T: DataResponseSerializerProtocol>(
+  public func sendAuthenticatedRequest<T: DataResponseSerializerProtocol>(
     requestParameters: RequestParameters,
     queue: DispatchQueue = DispatchQueue.global(qos: .default),
     responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
@@ -458,6 +466,67 @@ extension NetworkStack {
           .subscribe()
           .disposed(by: self.disposeBag)
       })
+  }
+  
+  /**
+   Use this function if you need to send some parameters in xml format and so directly as data
+   */
+  public func sendAuthenticatedRequest<T: DataResponseSerializerProtocol>(
+    request: DataRequest,
+    queue: DispatchQueue = DispatchQueue.global(qos: .default),
+    responseSerializer: T) -> Observable<(HTTPURLResponse, T.SerializedObject)> {
+    
+    let requestObservable: Observable<(HTTPURLResponse, T.SerializedObject)>
+    
+    if let tokenFetcher = self.renewTokenHandler {
+      requestObservable = self.sendAutoRetryRequest({ [unowned self] () -> Observable<(HTTPURLResponse, T.SerializedObject)> in
+        
+        // In case of HTTP 401 error, need to launch a copy with updated accessToken
+        var copy = self.copyAndUpdateAuthHeader(request: request) ?? request
+        
+        return self.sendRequest(alamofireRequest: copy, queue: queue, responseSerializer: responseSerializer)
+        }, renewTokenFunction: { () -> Observable<Void> in
+          return tokenFetcher()
+            .map { _ in return }
+      })
+    } else {
+      requestObservable = self.sendRequest(alamofireRequest: request, queue: queue, responseSerializer: responseSerializer)
+    }
+    
+    return requestObservable
+      .do(onError: { [unowned self] error in
+        self.askCredentialsIfNeeded(forError: error)
+          .subscribe()
+          .disposed(by: self.disposeBag)
+      })
+  }
+  
+  private func copyAndUpdateAuthHeader(request: DataRequest) -> DataRequest? {
+    guard let url: URL = request.request?.url,
+      let methodString: String = request.request?.httpMethod,
+      let method: HTTPMethod = HTTPMethod(rawValue: methodString),
+      var headers: [String: String] = request.request?.allHTTPHeaderFields,
+      let body: Data = request.request?.httpBody else {
+        return nil
+    }
+    
+    var originalRequest: URLRequest?
+    
+    // Update token
+    if let authorizationHeaderValue = self.auhtorizationHeaderValue() {
+      headers[NetworkStack.authorizationHeaderKey] = authorizationHeaderValue
+    }
+    
+    do {
+      originalRequest = try URLRequest(url: url, method: method, headers: headers)
+      originalRequest?.httpBody = body
+      let encodedURLRequest = try URLEncoding.default.encode(originalRequest!, with: nil)
+      let result = self.requestManager.request(encodedURLRequest)
+      
+      return result
+    } catch {
+      return nil
+    }
   }
 }
 
