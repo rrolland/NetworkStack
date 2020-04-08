@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "NetworkStack"
-  s.version      = "0.1.6"
+  s.version      = "0.1.8"
   s.summary      = "A Swift network request manager framework using reactive programming"
 
   s.homepage     = "https://github.com/NijiDigital/NetworkStack"
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.authors            = { "Niji" => "" }
   s.social_media_url   = "https://twitter.com/niji_digital"
 
-  s.ios.deployment_target = "8.0"
+  s.ios.deployment_target = "10.0"
 
   s.source       = { :git => "https://github.com/NijiDigital/NetworkStack.git", :tag => s.version.to_s }
 
@@ -19,6 +19,6 @@ Pod::Spec.new do |s|
   s.ios.framework  = 'MobileCoreServices'
 
   s.dependency 'Alamofire', '~> 4.0'
-  s.dependency 'RxSwift', '~> 4.0'
+  s.dependency 'RxSwift', '~> 5.1'
   s.dependency 'KeychainAccess', '~> 3.1'
 end
