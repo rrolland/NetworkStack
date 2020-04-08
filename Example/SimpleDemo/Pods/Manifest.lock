@@ -6,28 +6,25 @@ PODS:
     - Alamofire (~> 4.0)
     - KeychainAccess (~> 3.1)
     - RxSwift (~> 5.1)
-  - OHHTTPStubs (9.0.0):
-    - OHHTTPStubs/Default (= 9.0.0)
-  - OHHTTPStubs/Core (9.0.0)
-  - OHHTTPStubs/Default (9.0.0):
+  - OHHTTPStubs/Core (7.0.0)
+  - OHHTTPStubs/Default (7.0.0):
     - OHHTTPStubs/Core
     - OHHTTPStubs/JSON
     - OHHTTPStubs/NSURLSession
     - OHHTTPStubs/OHPathHelpers
-  - OHHTTPStubs/JSON (9.0.0):
+  - OHHTTPStubs/JSON (7.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/NSURLSession (9.0.0):
+  - OHHTTPStubs/NSURLSession (7.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/OHPathHelpers (9.0.0)
-  - OHHTTPStubs/Swift (9.0.0):
+  - OHHTTPStubs/OHPathHelpers (7.0.0)
+  - OHHTTPStubs/Swift (7.0.0):
     - OHHTTPStubs/Default
   - RxSwift (5.1.1)
 
 DEPENDENCIES:
   - Decodable
   - NetworkStack (from `../../`)
-  - OHHTTPStubs
-  - OHHTTPStubs/Swift
+  - OHHTTPStubs/Swift (~> 7.0)
   - RxSwift
 
 SPEC REPOS:
@@ -47,9 +44,9 @@ SPEC CHECKSUMS:
   Decodable: f0b95fa2fcf8633dd097aa8f7f09838ab3524f5d
   KeychainAccess: d5470352939ced6d6f7fb51cb2e67aae51fc294f
   NetworkStack: 8435fdc3a0b1890e1f817843207a3fbd8399ab24
-  OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
+  OHHTTPStubs: ef33a2c353110d306bb98f695435ec56ff5a26c3
   RxSwift: 81470a2074fa8780320ea5fe4102807cb7118178
 
-PODFILE CHECKSUM: c7b674f39f7e1543d0f18d1925b40a2ffb39566b
+PODFILE CHECKSUM: 819010f2a620e98d5c5521e8f8cbdcb4f67f38a5
 
 COCOAPODS: 1.8.4

@@ -21,6 +21,5 @@ end
 
 target 'NetworkStackDemoTests' do
   common_core_pods
-  pod 'OHHTTPStubs'
-  pod 'OHHTTPStubs/Swift'
+  pod 'OHHTTPStubs/Swift', '~> 7.0'
 end
