@@ -251,7 +251,7 @@ extension NetworkStack {
     return requestHeaders
   }
   
-  fileprivate func updateRequestAuthorizationHeader(dataRequest: Alamofire.DataRequest) -> Alamofire.DataRequest {
+  public func updateRequestAuthorizationHeader(dataRequest: Alamofire.DataRequest) -> Alamofire.DataRequest {
     guard let tokenValue = self.auhtorizationHeaderValue(), var newURLRequest = dataRequest.request else {
       return dataRequest
     }
