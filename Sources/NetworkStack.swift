@@ -343,6 +343,8 @@ extension NetworkStack {
       let returnError: NetworkStackError
       if let httpURLResponse = httpURLResponse, 400..<600 ~= httpURLResponse.statusCode {
         returnError = NetworkStackError.http(httpURLResponse: httpURLResponse, data: responseData)
+      } else if let httpURLResponse = httpURLResponse, 304 == httpURLResponse.statusCode {
+        returnError = NetworkStackError.notModified
       } else {
         returnError = NetworkStackError.otherError(error: error)
       }

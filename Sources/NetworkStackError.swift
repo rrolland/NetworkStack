@@ -37,6 +37,8 @@ public enum NetworkStackError: Error {
   case uploadManagerIsNotSet
   /// Requested token does'nt exist, is expired or invalidated
   case tokenUnavaible
+  /// 304 Not modified
+  case notModified
   /// Unknown
   case unknown
 }
