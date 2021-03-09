@@ -12,13 +12,13 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = "10.0"
 
-  s.source       = { :git => "https://github.com/NijiDigital/NetworkStack.git", :tag => s.version.to_s }
+  s.source       = { :git => 'https://github.com/rrolland/NetworkStack.git', :tag => s.version.to_s }
 
   s.source_files = 'Sources/**/*.swift'
 
   s.ios.framework  = 'MobileCoreServices'
 
-  s.dependency 'Alamofire', '~> 4.0'
+  s.dependency 'Alamofire', '~> 5.4'
   s.dependency 'RxSwift', '~> 5.1'
   s.dependency 'KeychainAccess', '~> 3.1'
 end

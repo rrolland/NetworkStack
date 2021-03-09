@@ -42,7 +42,6 @@ We have specific wiki. It will be helpful for you if you want to implement advan
 
 ----------------
 
-- [UploadRequests](Documentation/UploadRequests.md)
 - [OAuth2](Documentation/OAuth2)
 - [Auto retry](Documentation/AutoRetry.md)
 
@@ -57,10 +56,9 @@ let baseStringURL = "http://networkstack.fr/api/v1"
 let keychainService: KeychainService = KeychainService(serviceType: "com.networkstack.keychain")
 let networkStack = NetworkStack(baseURL: baseStringURL, keychainService: keychainService)
 ```
-You can customize your request in many way. Feel free to create your `SessionManager` to change behaviour of requesting inside `NetworkStack`. `NetworkStack` has two properties that you can set :
+You can customize your request in many way. Feel free to create your `Session` to change behaviour of requesting inside `NetworkStack`. `NetworkStack` has two properties that you can set :
 
-- **requestManager:** `Alamofire.SessionManager` is `Alamofire.SessionManager()` by default
-- **uploadManager:**  `Alamofire.SessionManager` is `nil` by default
+- **requestManager:** `Alamofire.Session` is `Alamofire.Session()` by default
 
 ### Routes as Routable protocol
 
@@ -105,15 +103,6 @@ let requestParameters = RequestParameters(method: .get,
                                           headers: nil) // [String: String] type
 ```
 
-***For Upload :** **`UploadRequestParameters`** :
-
-- **method:** ` Alamofire.HTTPMethod = .post`
-- **route:** `Routable`
-- **needsAuthorization:** `Bool = true`
-- **uploadFiles:** `[UploadRequestParametersFile]`
-- **parameters:** `Alamofire.Parameters? = nil`
-- **headers:** `Alamofire.HTTPHeaders? = nil`
-
 
 ### Requests
 
@@ -124,12 +113,6 @@ func sendRequestWithDataResponse(requestParameters: RequestParameters) -> Observ
 
 func sendRequestWithJSONResponse(requestParameters: RequestParameters) -> Observable<(HTTPURLResponse, Any)>
 
-// For Uploads
-func sendUploadRequestWithDataResponse(uploadRequestParameters: UploadRequestParameters) -> Observable<(HTTPURLResponse, Data)>
-
-func sendUploadRequestWithDataResponse(uploadRequestParameters: UploadRequestParameters) -> Observable<(HTTPURLResponse, Any)>
-
-func sendBackgroundUploadRequest(uploadRequestParameters: UploadRequestParameters) -> Observable<URLSessionTask>
 ```
 
 ### Send request and response
@@ -171,8 +154,6 @@ public enum NetworkStackError: Error {
   case otherError(error: Error)
   /// Request building has failed
   case requestBuildFail
-  /// Upload manager has not been setup
-  case uploadManagerIsNotSet
   /// Unknown
   case unknown
 }

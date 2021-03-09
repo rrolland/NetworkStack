@@ -1,6 +1,6 @@
 {
   "name": "NetworkStack",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "summary": "A Swift network request manager framework using reactive programming",
   "homepage": "https://github.com/NijiDigital/NetworkStack",
   "license": {
@@ -15,8 +15,8 @@
     "ios": "10.0"
   },
   "source": {
-    "git": "https://github.com/NijiDigital/NetworkStack.git",
-    "tag": "0.1.8"
+    "git": "https://github.com/rrolland/NetworkStack.git",
+    "tag": "0.1.10"
   },
   "source_files": "Sources/**/*.swift",
   "ios": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "Alamofire": [
-      "~> 4.0"
+      "~> 5.4"
     ],
     "RxSwift": [
       "~> 5.1"

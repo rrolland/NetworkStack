@@ -1,5 +1,5 @@
 //
-//  SessionManagerFactory.swift
+//  SessionFactory.swift
 //
 //  Copyright © 2017 Niji. All rights reserved.
 //
@@ -19,39 +19,26 @@
 import Foundation
 import Alamofire
 
-public struct SessionManagerFactory {
+public struct SessionFactory {
   
   // MARK: Request session manager
   
-  static func sessionManager(defaultHTTPHeaders: Alamofire.HTTPHeaders?,
-                             requestTimeout: TimeInterval = 60.0) -> Alamofire.SessionManager {
+  static func Session(defaultHTTPHeaders: Alamofire.HTTPHeaders?,
+                             requestTimeout: TimeInterval = 60.0) -> Alamofire.Session {
     let configuration = URLSessionConfiguration.default
     
     if let defaultHTTPHeaders = defaultHTTPHeaders {
-      configuration.httpAdditionalHeaders = defaultHTTPHeaders
+        configuration.httpAdditionalHeaders = defaultHTTPHeaders.dictionary
     }
     
     configuration.timeoutIntervalForRequest = requestTimeout
     
-    return self.sessionManager(withConfiguration: configuration)
-  }
-  
-  // MARK: Upload session manager
-  
-  static func backgroundUploadSessionManager(withIdentifier identifier: String) -> Alamofire.SessionManager {
-    let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
-    return self.sessionManager(withConfiguration: configuration)
-  }
-  
-  static func backgroundUploadSessionManager(withAppGroupIdentifier appGroupIdentifier: String) -> Alamofire.SessionManager {
-    let configuration = URLSessionConfiguration.background(withIdentifier: appGroupIdentifier)
-    configuration.sharedContainerIdentifier = appGroupIdentifier
-    return self.sessionManager(withConfiguration: configuration)
+    return self.Session(withConfiguration: configuration)
   }
   
   // MARK: Common
   
-  static func sessionManager(withConfiguration configuration: URLSessionConfiguration) -> Alamofire.SessionManager {
-    return Alamofire.SessionManager(configuration: configuration)
+  static func Session(withConfiguration configuration: URLSessionConfiguration) -> Alamofire.Session {
+    return Alamofire.Session(configuration: configuration)
   }
 }
