@@ -5,7 +5,7 @@ PODS:
   - NetworkStack (0.1.10):
     - Alamofire (~> 5.4)
     - KeychainAccess (~> 3.1)
-    - RxSwift (~> 5.1)
+    - RxSwift (~> 6.0)
   - OHHTTPStubs/Core (7.0.0)
   - OHHTTPStubs/Default (7.0.0):
     - OHHTTPStubs/Core
@@ -19,7 +19,7 @@ PODS:
   - OHHTTPStubs/OHPathHelpers (7.0.0)
   - OHHTTPStubs/Swift (7.0.0):
     - OHHTTPStubs/Default
-  - RxSwift (5.1.1)
+  - RxSwift (6.1.0)
 
 DEPENDENCIES:
   - Decodable
@@ -43,9 +43,9 @@ SPEC CHECKSUMS:
   Alamofire: 2291f7d21ca607c491dd17642e5d40fdcda0e65c
   Decodable: f0b95fa2fcf8633dd097aa8f7f09838ab3524f5d
   KeychainAccess: d5470352939ced6d6f7fb51cb2e67aae51fc294f
-  NetworkStack: e798423e6ba0f6a0125cb1a2c3260794bb4dbd95
+  NetworkStack: 2b5169ca7ba62e9a16d1059bcbfc952f41209ac5
   OHHTTPStubs: ef33a2c353110d306bb98f695435ec56ff5a26c3
-  RxSwift: 81470a2074fa8780320ea5fe4102807cb7118178
+  RxSwift: a834e5c538e89eca0cae86f403f4fbf0336786ce
 
 PODFILE CHECKSUM: 6c5c33b4487b39be018b02a0bbcd0cfdd0730264
 

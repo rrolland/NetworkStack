@@ -23,7 +23,7 @@ class TokenManager {
 
   /// using Rx Variable instead of direct String, 
   /// this way, when you call fetchToken(), access to value is only done at subscribe time
-  private let currentToken: Variable<String?> = Variable<String?>(nil)
+    private let currentToken: BehaviorSubject<String?> = BehaviorSubject<String?>(value: nil)
 
   /// Using weak var for this property.
   /// The goal is to automatiquely set back to nil when no more observer subscribe
@@ -55,7 +55,7 @@ class TokenManager {
   }
 
   func invalidateToken() {
-    self.currentToken.value = nil
+    self.currentToken.onNext(nil)
   }
 
   // MARK: - Private helpers
@@ -67,7 +67,7 @@ class TokenManager {
   private func sharedTokenRequest() -> Observable<String> {
     return tokenFetcher
       .do(onNext: { [unowned self] token in
-        self.currentToken.value = token
+        self.currentToken.onNext(token)
       })
       .share()
   }
