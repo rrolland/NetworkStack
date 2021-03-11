@@ -2,9 +2,10 @@ PODS:
   - Alamofire (5.4.1)
   - Decodable (0.6.0)
   - KeychainAccess (3.2.1)
-  - NetworkStack (0.1.10):
+  - NetworkStack (0.1.11):
     - Alamofire (~> 5.4)
     - KeychainAccess (~> 3.1)
+    - RxCocoa (~> 6.0)
     - RxSwift (~> 6.0)
   - OHHTTPStubs/Core (7.0.0)
   - OHHTTPStubs/Default (7.0.0):
@@ -19,6 +20,11 @@ PODS:
   - OHHTTPStubs/OHPathHelpers (7.0.0)
   - OHHTTPStubs/Swift (7.0.0):
     - OHHTTPStubs/Default
+  - RxCocoa (6.1.0):
+    - RxRelay (= 6.1.0)
+    - RxSwift (= 6.1.0)
+  - RxRelay (6.1.0):
+    - RxSwift (= 6.1.0)
   - RxSwift (6.1.0)
 
 DEPENDENCIES:
@@ -33,6 +39,8 @@ SPEC REPOS:
     - Decodable
     - KeychainAccess
     - OHHTTPStubs
+    - RxCocoa
+    - RxRelay
     - RxSwift
 
 EXTERNAL SOURCES:
@@ -43,8 +51,10 @@ SPEC CHECKSUMS:
   Alamofire: 2291f7d21ca607c491dd17642e5d40fdcda0e65c
   Decodable: f0b95fa2fcf8633dd097aa8f7f09838ab3524f5d
   KeychainAccess: d5470352939ced6d6f7fb51cb2e67aae51fc294f
-  NetworkStack: 2b5169ca7ba62e9a16d1059bcbfc952f41209ac5
+  NetworkStack: 065f61287cdefa837111bc61028965e06b4b869b
   OHHTTPStubs: ef33a2c353110d306bb98f695435ec56ff5a26c3
+  RxCocoa: 5c51f02d562cbd94629f6c26cf0c80fe4ab8d343
+  RxRelay: 483e1a19fad961b41f0b0c0bee506f46c1ae14fe
   RxSwift: a834e5c538e89eca0cae86f403f4fbf0336786ce
 
 PODFILE CHECKSUM: 6c5c33b4487b39be018b02a0bbcd0cfdd0730264

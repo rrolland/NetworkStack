@@ -20,5 +20,6 @@ Pod::Spec.new do |s|
 
   s.dependency 'Alamofire', '~> 5.4'
   s.dependency 'RxSwift', '~> 6.0'
+  s.dependency 'RxCocoa', '~> 6.0'
   s.dependency 'KeychainAccess', '~> 3.1'
 end
