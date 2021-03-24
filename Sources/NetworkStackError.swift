@@ -33,8 +33,6 @@ public enum NetworkStackError: Error {
   case otherError(error: NSError)
   /// Request building has failed
   case requestBuildFail
-  /// Upload manager has not been setup
-  case uploadManagerIsNotSet
   /// Requested token does'nt exist, is expired or invalidated
   case tokenUnavaible
   /// 304 Not modified
