@@ -23,7 +23,7 @@ public struct SessionFactory {
   
   // MARK: Request session manager
   
-  static func Session(defaultHTTPHeaders: Alamofire.HTTPHeaders?,
+  static func session(defaultHTTPHeaders: Alamofire.HTTPHeaders?,
                              requestTimeout: TimeInterval = 60.0) -> Alamofire.Session {
     let configuration = URLSessionConfiguration.default
     
@@ -33,12 +33,12 @@ public struct SessionFactory {
     
     configuration.timeoutIntervalForRequest = requestTimeout
     
-    return self.Session(withConfiguration: configuration)
+    return self.session(withConfiguration: configuration)
   }
   
   // MARK: Common
   
-  static func Session(withConfiguration configuration: URLSessionConfiguration) -> Alamofire.Session {
+  static func session(withConfiguration configuration: URLSessionConfiguration) -> Alamofire.Session {
     return Alamofire.Session(configuration: configuration)
   }
 }
