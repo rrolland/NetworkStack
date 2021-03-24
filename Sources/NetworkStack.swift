@@ -341,7 +341,7 @@ extension NetworkStack {
     -> Observable<(HTTPURLResponse, T.SerializedObject)> {
       
       // If Sessions.startImmediatly == false, need to manually launch the request.
-      if let state: URLSessionTask.State = alamofireRequest.task?.state, state == .suspended {
+      if alamofireRequest.state == .initialized {
         alamofireRequest.resume()
       }
       
